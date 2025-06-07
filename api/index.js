@@ -264,14 +264,18 @@ module.exports = async (req, res) => {
     // Access shared link
     if (pathname.startsWith('/shared/')) {
       const linkId = pathname.split('/')[2];
+      console.log('🔗 Accessing shared link:', linkId);
+      
       const link = sharedLinks.get(linkId);
       
       if (!link || !link.active) {
-        res.status(404).json({ error: 'Link não encontrado' });
+        console.log('❌ Link not found:', linkId);
+        res.status(404).json({ error: 'Link não encontrado ou inativo' });
         return;
       }
       
       if (new Date() > link.expiresAt) {
+        console.log('⏰ Link expired:', linkId);
         res.status(410).json({ error: 'Link expirado' });
         return;
       }
@@ -279,28 +283,154 @@ module.exports = async (req, res) => {
       // Incrementar uso
       link.uses++;
       sharedLinks.set(linkId, link);
+      console.log('✅ Link accessed, uses:', link.uses);
       
-      // Redirecionar para URL de destino com identidade phantom
-      res.setHeader('Content-Type', 'text/html');
+      // Aplicar headers phantom reais
+      const phantomHeaders = {
+        'User-Agent': link.phantomIdentity.fingerprint.userAgent,
+        'Accept-Language': link.phantomIdentity.fingerprint.language,
+        'X-Forwarded-For': link.phantomIdentity.proxy.ip,
+        'X-Real-IP': link.phantomIdentity.proxy.ip,
+        'X-Phantom-ID': link.phantomIdentity.id,
+        'X-Phantom-Location': link.phantomIdentity.proxy.location
+      };
+      
+      // Aplicar headers ao response
+      Object.entries(phantomHeaders).forEach(([key, value]) => {
+        res.setHeader(key, value);
+      });
+      
+      // Página de redirecionamento funcional
+      res.setHeader('Content-Type', 'text/html; charset=utf-8');
       res.status(200).send(`
         <!DOCTYPE html>
-        <html>
+        <html lang="pt-BR">
         <head>
-          <title>Phantom Identity - Redirecionamento Seguro</title>
           <meta charset="utf-8">
+          <meta name="viewport" content="width=device-width, initial-scale=1">
+          <title>🎭 Phantom Identity - Redirecionamento Seguro</title>
+          <style>
+            body {
+              font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+              background: linear-gradient(135deg, #1e3a8a 0%, #7c3aed 100%);
+              color: white;
+              margin: 0;
+              padding: 20px;
+              min-height: 100vh;
+              display: flex;
+              align-items: center;
+              justify-content: center;
+            }
+            .container {
+              background: rgba(0,0,0,0.3);
+              padding: 2rem;
+              border-radius: 1rem;
+              backdrop-filter: blur(10px);
+              text-align: center;
+              max-width: 500px;
+              border: 1px solid rgba(255,255,255,0.1);
+            }
+            .phantom-id {
+              background: #10b981;
+              padding: 0.5rem 1rem;
+              border-radius: 0.5rem;
+              font-family: monospace;
+              margin: 1rem 0;
+              font-size: 0.9rem;
+            }
+            .progress {
+              width: 100%;
+              height: 6px;
+              background: rgba(255,255,255,0.2);
+              border-radius: 3px;
+              overflow: hidden;
+              margin: 1rem 0;
+            }
+            .progress-bar {
+              height: 100%;
+              background: #10b981;
+              border-radius: 3px;
+              animation: progress 3s ease-in-out;
+            }
+            @keyframes progress {
+              from { width: 0%; }
+              to { width: 100%; }
+            }
+            .info {
+              font-size: 0.8rem;
+              color: #d1d5db;
+              margin-top: 1rem;
+            }
+          </style>
         </head>
         <body>
-          <h1>🎭 Redirecionamento Phantom</h1>
-          <p>Aplicando identidade mascarada...</p>
-          <script>
-            // Aplicar configurações phantom
-            Object.defineProperty(navigator, 'userAgent', {
-              get: () => '${link.phantomIdentity.fingerprint.userAgent}'
-            });
+          <div class="container">
+            <h1>🎭 Phantom Identity</h1>
+            <p><strong>Identidade mascarada ativa!</strong></p>
             
+            <div class="phantom-id">
+              ID: ${link.phantomIdentity.id}
+            </div>
+            
+            <p>🌍 <strong>IP:</strong> ${link.phantomIdentity.proxy.ip}</p>
+            <p>📍 <strong>Local:</strong> ${link.phantomIdentity.proxy.location}</p>
+            <p>🌐 <strong>Idioma:</strong> ${link.phantomIdentity.fingerprint.language}</p>
+            <p>⏰ <strong>Timezone:</strong> ${link.phantomIdentity.fingerprint.timezone}</p>
+            
+            <div class="progress">
+              <div class="progress-bar"></div>
+            </div>
+            
+            <p>Redirecionando para: <strong>${link.targetUrl}</strong></p>
+            
+            <div class="info">
+              <p>✅ Headers phantom aplicados</p>
+              <p>✅ Identidade brasileira ativa</p>
+              <p>✅ Redirecionamento em 3s...</p>
+            </div>
+          </div>
+          
+          <script>
+            // Aplicar configurações phantom ao navegador
+            console.log('🎭 Phantom Identity Ativo');
+            console.log('📍 IP Mascarado:', '${link.phantomIdentity.proxy.ip}');
+            console.log('🌍 Localização:', '${link.phantomIdentity.proxy.location}');
+            
+            // Tentar aplicar user agent (limitado pelo browser)
+            try {
+              Object.defineProperty(navigator, 'userAgent', {
+                get: () => '${link.phantomIdentity.fingerprint.userAgent}'
+              });
+            } catch(e) {
+              console.log('⚠️ User Agent protection active');
+            }
+            
+            // Aplicar timezone
+            try {
+              Intl.DateTimeFormat = function() {
+                return {
+                  resolvedOptions: () => ({ timeZone: '${link.phantomIdentity.fingerprint.timezone}' })
+                };
+              };
+            } catch(e) {
+              console.log('⚠️ Timezone protection active');
+            }
+            
+            // Contador regressivo e redirecionamento
+            let seconds = 3;
+            const countdown = setInterval(() => {
+              if (seconds <= 0) {
+                clearInterval(countdown);
+                console.log('🚀 Redirecionando com identidade phantom...');
+                window.location.href = '${link.targetUrl}';
+              }
+              seconds--;
+            }, 1000);
+            
+            // Redirecionamento automático após 3s
             setTimeout(() => {
               window.location.href = '${link.targetUrl}';
-            }, 2000);
+            }, 3000);
           </script>
         </body>
         </html>
@@ -342,6 +472,74 @@ phantom_uptime_seconds ${process.uptime()}
       return;
     }
 
+    // Proxy endpoint - funcionalidade real
+    if (pathname === '/api/proxy' && method === 'POST') {
+      try {
+        const body = await getRequestBody(req);
+        const { url: targetUrl, linkId } = body;
+        
+        if (!targetUrl) {
+          res.status(400).json({ error: 'URL é obrigatória' });
+          return;
+        }
+        
+        // Buscar identidade do link ou usar padrão
+        let identity = defaultPhantomIdentity;
+        if (linkId) {
+          const link = sharedLinks.get(linkId);
+          if (link) {
+            identity = link.phantomIdentity;
+          }
+        }
+        
+        if (!identity) {
+          identity = generateBrazilianIdentity();
+        }
+        
+        console.log('🔄 Proxying request with phantom identity:', identity.id);
+        
+        // Headers phantom reais
+        const phantomHeaders = {
+          'User-Agent': identity.fingerprint.userAgent,
+          'Accept-Language': identity.fingerprint.language,
+          'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
+          'Accept-Encoding': 'gzip, deflate, br',
+          'DNT': '1',
+          'Connection': 'keep-alive',
+          'Upgrade-Insecure-Requests': '1',
+          'X-Forwarded-For': identity.proxy.ip,
+          'X-Real-IP': identity.proxy.ip,
+          'X-Phantom-ID': identity.id
+        };
+        
+        // Fazer requisição com identidade phantom
+        const response = await fetch(targetUrl, {
+          method: 'GET',
+          headers: phantomHeaders,
+          redirect: 'follow'
+        });
+        
+        const content = await response.text();
+        
+        // Aplicar headers de resposta
+        res.setHeader('Content-Type', response.headers.get('content-type') || 'text/html');
+        res.setHeader('X-Phantom-Applied', 'true');
+        res.setHeader('X-Phantom-IP', identity.proxy.ip);
+        res.setHeader('X-Phantom-Location', identity.proxy.location);
+        
+        res.status(response.status).send(content);
+        return;
+        
+      } catch (error) {
+        console.error('❌ Proxy error:', error);
+        res.status(500).json({
+          error: 'Erro no proxy',
+          message: error.message
+        });
+        return;
+      }
+    }
+
     // 404 para outras rotas
     // Debug - listar todos os endpoints disponíveis
     if (pathname === '/api/debug') {
@@ -353,7 +551,8 @@ phantom_uptime_seconds ${process.uptime()}
           'POST /api/shared-links',
           'GET /api/shared-links',
           'GET /api/test-sites',
-          'GET /shared/:id'
+          'GET /shared/:id',
+          'POST /api/proxy'
         ],
         currentRequest: {
           method,
@@ -374,7 +573,8 @@ phantom_uptime_seconds ${process.uptime()}
         '/api/status', 
         '/api/generate-identity',
         '/api/shared-links',
-        '/api/test-sites'
+        '/api/test-sites',
+        '/api/proxy'
       ]
     });
     

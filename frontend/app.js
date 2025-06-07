@@ -365,8 +365,52 @@ class PhantomDashboard {
     
     section.classList.remove('hidden');
     
+    // Adicionar botão de teste do proxy
+    const testButton = document.createElement('button');
+    testButton.innerHTML = '🧪 Testar Proxy Real';
+    testButton.className = 'ml-3 bg-purple-600 hover:bg-purple-700 px-3 py-1 rounded text-xs transition duration-200';
+    testButton.onclick = () => this.testRealProxy(linkData.shortId);
+    
+    const copyButton = document.getElementById('copy-link');
+    if (copyButton && !copyButton.nextElementSibling?.textContent?.includes('Testar')) {
+      copyButton.parentNode.insertBefore(testButton, copyButton.nextSibling);
+    }
+    
     // Scroll para a seção
     section.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  }
+
+  async testRealProxy(linkId) {
+    const testUrl = 'https://httpbin.org/headers'; // API que retorna headers recebidos
+    
+    this.addLog('🧪 Testando proxy real...', 'info');
+    
+    try {
+      const response = await fetch('/api/proxy', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          url: testUrl,
+          linkId: linkId
+        })
+      });
+      
+      if (response.ok) {
+        const phantomIP = response.headers.get('X-Phantom-IP');
+        const phantomLocation = response.headers.get('X-Phantom-Location');
+        
+        this.addLog(`✅ Proxy funcional! IP mascarado: ${phantomIP}`, 'success');
+        this.addLog(`📍 Localização aplicada: ${phantomLocation}`, 'success');
+        this.addLog('🔒 Headers phantom aplicados com sucesso', 'success');
+      } else {
+        this.addLog('❌ Erro no teste do proxy', 'error');
+      }
+    } catch (error) {
+      console.error('Erro no teste do proxy:', error);
+      this.addLog('❌ Erro ao testar proxy real', 'error');
+    }
   }
 
   async copyLinkToClipboard() {

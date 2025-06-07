@@ -10,7 +10,11 @@
       "destination": "/api/index.js"
     },
     {
-      "source": "/(.*)",
+      "source": "/shared/(.*)",
+      "destination": "/api/index.js"
+    },
+    {
+      "source": "/(.*\\.(js|css|png|jpg|jpeg|gif|ico|svg|woff|woff2|ttf|eot|json|webmanifest))",
       "destination": "/public/$1"
     },
     {
