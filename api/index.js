@@ -123,6 +123,9 @@ module.exports = async (req, res) => {
     return;
   }
 
+  // Debug log
+  console.log(`📡 ${method} ${pathname}`);
+
   try {
     // Health check
     if (pathname === '/health') {
@@ -183,41 +186,65 @@ module.exports = async (req, res) => {
 
     // Create shared link
     if (pathname === '/api/shared-links' && method === 'POST') {
+      console.log('🔗 Creating shared link...');
+      
       // Garantir que temos identidade brasileira
       if (!defaultPhantomIdentity) {
         defaultPhantomIdentity = generateBrazilianIdentity();
+        console.log('🇧🇷 Generated Brazilian identity');
       }
       
-      const body = await getRequestBody(req);
-      const { name, expiresIn, targetUrl, allowMobile } = body;
-      
-      const linkId = uuidv4().substring(0, 8); // ID mais curto
-      const expirationTime = Date.now() + (parseInt(expiresIn) || 3600) * 1000;
-      
-      const sharedLink = {
-        id: linkId,
-        name: name || 'Link Compartilhado',
-        targetUrl: targetUrl || 'https://example.com',
-        url: `https://${req.headers.host}/shared/${linkId}`,
-        createdAt: new Date(),
-        expiresAt: new Date(expirationTime),
-        allowMobile: allowMobile || false,
-        phantomIdentity: { ...defaultPhantomIdentity },
-        active: true,
-        uses: 0
-      };
-      
-      sharedLinks.set(linkId, sharedLink);
-      
-      res.status(200).json({
-        success: true,
-        link: sharedLink,
-        shortId: linkId,
-        fullUrl: `/shared/${linkId}`,
-        sharedIP: defaultPhantomIdentity.proxy.ip,
-        expiresAt: sharedLink.expiresAt
-      });
-      return;
+      try {
+        const body = await getRequestBody(req);
+        console.log('📦 Request body:', body);
+        
+        const { name, expiresIn, targetUrl, allowMobile } = body;
+        
+        if (!targetUrl) {
+          res.status(400).json({
+            success: false,
+            error: 'URL de destino é obrigatória'
+          });
+          return;
+        }
+        
+        const linkId = uuidv4().substring(0, 8); // ID mais curto
+        const expirationTime = Date.now() + (parseInt(expiresIn) || 3600) * 1000;
+        
+        const sharedLink = {
+          id: linkId,
+          name: name || 'Link Compartilhado',
+          targetUrl: targetUrl,
+          url: `https://${req.headers.host}/shared/${linkId}`,
+          createdAt: new Date(),
+          expiresAt: new Date(expirationTime),
+          allowMobile: allowMobile || false,
+          phantomIdentity: { ...defaultPhantomIdentity },
+          active: true,
+          uses: 0
+        };
+        
+        sharedLinks.set(linkId, sharedLink);
+        console.log('✅ Link created:', linkId);
+        
+        res.status(200).json({
+          success: true,
+          link: sharedLink,
+          shortId: linkId,
+          fullUrl: `/shared/${linkId}`,
+          sharedIP: defaultPhantomIdentity.proxy.ip,
+          expiresAt: sharedLink.expiresAt
+        });
+        return;
+        
+      } catch (error) {
+        console.error('❌ Error creating link:', error);
+        res.status(500).json({
+          success: false,
+          error: 'Erro ao processar requisição: ' + error.message
+        });
+        return;
+      }
     }
 
     // List shared links
@@ -316,13 +343,47 @@ phantom_uptime_seconds ${process.uptime()}
     }
 
     // 404 para outras rotas
-    res.status(404).json({ error: 'Endpoint não encontrado' });
+    // Debug - listar todos os endpoints disponíveis
+    if (pathname === '/api/debug') {
+      res.status(200).json({
+        availableEndpoints: [
+          'GET /health',
+          'GET /api/status',
+          'POST /api/generate-identity',
+          'POST /api/shared-links',
+          'GET /api/shared-links',
+          'GET /api/test-sites',
+          'GET /shared/:id'
+        ],
+        currentRequest: {
+          method,
+          pathname,
+          headers: req.headers
+        }
+      });
+      return;
+    }
+
+    console.log(`❌ 404 - Endpoint não encontrado: ${method} ${pathname}`);
+    res.status(404).json({ 
+      error: 'Endpoint não encontrado',
+      method,
+      pathname,
+      availableEndpoints: [
+        '/health',
+        '/api/status', 
+        '/api/generate-identity',
+        '/api/shared-links',
+        '/api/test-sites'
+      ]
+    });
     
   } catch (error) {
-    console.error('API Error:', error);
+    console.error('❌ API Error:', error);
     res.status(500).json({ 
       error: 'Erro interno do servidor',
-      message: error.message 
+      message: error.message,
+      pathname
     });
   }
 };
