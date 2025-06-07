@@ -5,7 +5,7 @@
   "main": "api/index.js",
   "scripts": {
     "dev": "vercel dev",
-    "build": "echo 'Build completed for Vercel'",
+    "build": "node -e \"const fs=require('fs'); if(!fs.existsSync('public')) fs.mkdirSync('public', {recursive:true}); fs.cpSync('frontend', 'public', {recursive:true});\"",
     "start": "vercel dev",
     "deploy": "vercel --prod",
     "test": "echo 'Tests will be added soon'"

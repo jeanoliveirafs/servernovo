@@ -11,11 +11,11 @@
     },
     {
       "source": "/(.*)",
-      "destination": "/frontend/$1"
+      "destination": "/public/$1"
     },
     {
       "source": "/",
-      "destination": "/frontend/index.html"
+      "destination": "/public/index.html"
     }
   ],
   "headers": [
