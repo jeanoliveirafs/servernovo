@@ -1,19 +1,17 @@
 {
   "version": 2,
-  "builds": [
-    {
-      "src": "api/**/*.js",
-      "use": "@vercel/node"
-    },
-    {
-      "src": "public/**",
-      "use": "@vercel/static"
+  "functions": {
+    "api/shared.js": {
+      "maxDuration": 10
     }
-  ],
+  },
   "routes": [
     {
-      "src": "/shared/(.*)",
-      "dest": "/api/shared.js?id=$1"
+      "src": "/shared/([^/]+)",
+      "dest": "/api/shared.js?id=$1",
+      "headers": {
+        "cache-control": "s-maxage=0"
+      }
     },
     {
       "src": "/api/(.*)",
@@ -24,15 +22,11 @@
       "dest": "/api/index.js"
     },
     {
-      "src": "/manifest.json",
-      "dest": "/public/manifest.json"
+      "src": "/debug",
+      "dest": "/api/index.js"
     },
     {
-      "src": "/sw.js",
-      "dest": "/public/sw.js"
-    },
-    {
-      "src": "/(.*\\.(js|css|png|jpg|jpeg|gif|ico|svg|woff|woff2|ttf|eot))",
+      "src": "/(.*\\.(js|css|png|jpg|jpeg|gif|ico|svg|woff|woff2|ttf|eot|json))",
       "dest": "/public/$1"
     },
     {
