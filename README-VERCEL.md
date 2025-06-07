@@ -64,4 +64,9 @@ PHANTOM_SECRET=sua-chave-secreta-32-chars
 - **GitHub Repo:** [github.com/jeanoliveirafs/servernovo](https://github.com/jeanoliveirafs/servernovo)
 - **PWA Guide:** [web.dev/progressive-web-apps](https://web.dev/progressive-web-apps)
 
-**🎯 DEPLOY MAIS FÁCIL IMPOSSÍVEL!** 
+**🎯 DEPLOY MAIS FÁCIL IMPOSSÍVEL!**
+
+# Localmente, teste:
+npm install
+node build.js
+# Deve criar pasta public com todos arquivos 
