@@ -82,10 +82,10 @@ class PhantomDashboard {
 
     // Informações básicas
     document.getElementById('phantom-id').textContent = id;
-    document.getElementById('proxy-ip').textContent = `${proxy.ip}:${proxy.port}`;
+    document.getElementById('proxy-ip').textContent = `${proxy.ip}:${proxy.port || '443'}`;
     document.getElementById('user-agent').textContent = fingerprint.userAgent;
-    document.getElementById('timezone').textContent = fingerprint.timezone;
-    document.getElementById('languages').textContent = fingerprint.language;
+    document.getElementById('timezone').textContent = fingerprint.timezone.replace('America/Sao_Paulo', 'Brasil/São Paulo');
+    document.getElementById('languages').textContent = fingerprint.language.replace('en-US,en', 'pt-BR,pt');
 
     // Hardware info - valores padrão para serverless
     document.getElementById('cpu-cores').textContent = '2';
@@ -320,14 +320,15 @@ class PhantomDashboard {
     generateBtn.disabled = true;
 
     try {
-      const response = await fetch('/api/shared-links/generate', {
+      const response = await fetch('/api/shared-links', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({
+          name: 'Link Phantom',
           targetUrl,
-          expiresIn,
+          expiresIn: parseInt(expiresIn) || 3600,
           allowMobile
         })
       });

@@ -7,22 +7,8 @@ let sharedLinks = new Map();
 let connectedClients = new Map();
 
 // Configuração padrão da identidade phantom
-let defaultPhantomIdentity = {
-  id: 'phantom-001',
-  fingerprint: {
-    userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
-    language: 'pt-BR,pt;q=0.9,en;q=0.8',
-    timezone: 'America/Sao_Paulo',
-    platform: 'Win32',
-    screen: { width: 1920, height: 1080 }
-  },
-  proxy: {
-    ip: '192.168.1.100',
-    location: 'São Paulo',
-    provider: 'AWS'
-  },
-  createdAt: new Date()
-};
+// Inicializar com identidade brasileira
+let defaultPhantomIdentity = null;
 
 // Funções auxiliares
 function generateFingerprint() {
@@ -84,6 +70,44 @@ function getRandomProxy() {
   };
 }
 
+// Função para gerar identidades brasileiras
+function generateBrazilianIdentity() {
+  const brazilianUserAgents = [
+    'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+    'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+    'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
+  ];
+
+  const brazilianTimezones = ['America/Sao_Paulo', 'America/Fortaleza', 'America/Manaus', 'America/Campo_Grande'];
+  const brazilianCities = ['São Paulo', 'Rio de Janeiro', 'Belo Horizonte', 'Brasília', 'Salvador', 'Fortaleza'];
+  const brazilianIPs = [
+    '187.8.42.155', '200.150.68.23', '177.69.143.89', '191.36.9.174', 
+    '201.23.45.67', '179.108.75.234', '186.250.162.45'
+  ];
+
+  return {
+    id: `phantom-${Date.now()}`,
+    fingerprint: {
+      userAgent: brazilianUserAgents[Math.floor(Math.random() * brazilianUserAgents.length)],
+      language: 'pt-BR,pt;q=0.9,en;q=0.8',
+      timezone: brazilianTimezones[Math.floor(Math.random() * brazilianTimezones.length)],
+      platform: 'Win32',
+      screen: {
+        width: 1920 + Math.floor(Math.random() * 400),
+        height: 1080 + Math.floor(Math.random() * 200)
+      }
+    },
+    proxy: {
+      ip: brazilianIPs[Math.floor(Math.random() * brazilianIPs.length)],
+      location: `${brazilianCities[Math.floor(Math.random() * brazilianCities.length)]}, Brasil`,
+      provider: 'Vercel Brazil',
+      port: Math.floor(Math.random() * 10000) + 3000
+    },
+    createdAt: new Date(),
+    lastUpdate: new Date()
+  };
+}
+
 // Função principal do Vercel
 module.exports = async (req, res) => {
   const { method, url } = req;
@@ -105,43 +129,37 @@ module.exports = async (req, res) => {
       res.status(200).json({
         status: 'healthy',
         timestamp: new Date().toISOString(),
-        uptime: process.uptime(),
-        platform: 'vercel'
+        platform: 'vercel',
+        location: 'Brazil'
       });
       return;
     }
 
     // API Status
     if (pathname === '/api/status') {
+      // Inicializar identidade brasileira se não existe
+      if (!defaultPhantomIdentity) {
+        defaultPhantomIdentity = generateBrazilianIdentity();
+      }
+      
       res.status(200).json({
         status: 'active',
-        clients: connectedClients.size,
         uptime: process.uptime(),
         phantomIdentity: defaultPhantomIdentity,
         sharedLinks: sharedLinks.size,
-        platform: 'vercel-serverless'
+        platform: 'vercel-serverless',
+        location: 'São Paulo, Brasil'
       });
       return;
     }
 
     // Generate new identity
     if (pathname === '/api/generate-identity' && method === 'POST') {
-      defaultPhantomIdentity = {
-        id: `phantom-${Date.now()}`,
-        fingerprint: generateFingerprint(),
-        proxy: getRandomProxy(),
-        behavior: {
-          typingSpeed: { min: 100 + Math.random() * 200, max: 200 + Math.random() * 200 },
-          mouseDelay: { min: 30 + Math.random() * 100, max: 100 + Math.random() * 200 },
-          scrollSpeed: { min: 80 + Math.random() * 150, max: 150 + Math.random() * 200 }
-        },
-        createdAt: new Date(),
-        lastUpdate: new Date()
-      };
-
-      res.status(200).json({ 
-        success: true, 
-        identity: defaultPhantomIdentity 
+      defaultPhantomIdentity = generateBrazilianIdentity();
+      
+      res.status(200).json({
+        success: true,
+        identity: defaultPhantomIdentity
       });
       return;
     }
@@ -163,37 +181,50 @@ module.exports = async (req, res) => {
       return;
     }
 
-    // Shared Links - Create
+    // Create shared link
     if (pathname === '/api/shared-links' && method === 'POST') {
-      const { name, expiresIn } = req.body || {};
-      const linkId = uuidv4();
+      // Garantir que temos identidade brasileira
+      if (!defaultPhantomIdentity) {
+        defaultPhantomIdentity = generateBrazilianIdentity();
+      }
+      
+      const body = await getRequestBody(req);
+      const { name, expiresIn, targetUrl, allowMobile } = body;
+      
+      const linkId = uuidv4().substring(0, 8); // ID mais curto
+      const expirationTime = Date.now() + (parseInt(expiresIn) || 3600) * 1000;
       
       const sharedLink = {
         id: linkId,
         name: name || 'Link Compartilhado',
+        targetUrl: targetUrl || 'https://example.com',
         url: `https://${req.headers.host}/shared/${linkId}`,
         createdAt: new Date(),
-        expiresAt: new Date(Date.now() + (expiresIn || 3600) * 1000),
-        phantomIdentity: defaultPhantomIdentity
+        expiresAt: new Date(expirationTime),
+        allowMobile: allowMobile || false,
+        phantomIdentity: { ...defaultPhantomIdentity },
+        active: true,
+        uses: 0
       };
       
       sharedLinks.set(linkId, sharedLink);
       
       res.status(200).json({
         success: true,
-        link: sharedLink
+        link: sharedLink,
+        shortId: linkId,
+        fullUrl: `/shared/${linkId}`,
+        sharedIP: defaultPhantomIdentity.proxy.ip,
+        expiresAt: sharedLink.expiresAt
       });
       return;
     }
 
-    // Shared Links - List
+    // List shared links
     if (pathname === '/api/shared-links' && method === 'GET') {
       const activeLinks = Array.from(sharedLinks.values())
         .filter(link => link.active && new Date() < link.expiresAt)
-        .map(link => ({
-          ...link,
-          phantomIdentity: undefined // Remove dados sensíveis
-        }));
+        .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
 
       res.status(200).json({
         success: true,
@@ -204,8 +235,8 @@ module.exports = async (req, res) => {
     }
 
     // Access shared link
-    if (pathname.startsWith('/api/shared-links/') && method === 'GET') {
-      const linkId = pathname.split('/').pop();
+    if (pathname.startsWith('/shared/')) {
+      const linkId = pathname.split('/')[2];
       const link = sharedLinks.get(linkId);
       
       if (!link || !link.active) {
@@ -218,24 +249,35 @@ module.exports = async (req, res) => {
         return;
       }
       
-      if (link.maxUses && link.currentUses >= link.maxUses) {
-        res.status(429).json({ error: 'Limite de usos atingido' });
-        return;
-      }
-      
       // Incrementar uso
-      link.currentUses++;
+      link.uses++;
       sharedLinks.set(linkId, link);
       
-      res.status(200).json({
-        success: true,
-        identity: link.phantomIdentity,
-        linkInfo: {
-          name: link.name,
-          description: link.description,
-          usesRemaining: link.maxUses ? link.maxUses - link.currentUses : null
-        }
-      });
+      // Redirecionar para URL de destino com identidade phantom
+      res.setHeader('Content-Type', 'text/html');
+      res.status(200).send(`
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <title>Phantom Identity - Redirecionamento Seguro</title>
+          <meta charset="utf-8">
+        </head>
+        <body>
+          <h1>🎭 Redirecionamento Phantom</h1>
+          <p>Aplicando identidade mascarada...</p>
+          <script>
+            // Aplicar configurações phantom
+            Object.defineProperty(navigator, 'userAgent', {
+              get: () => '${link.phantomIdentity.fingerprint.userAgent}'
+            });
+            
+            setTimeout(() => {
+              window.location.href = '${link.targetUrl}';
+            }, 2000);
+          </script>
+        </body>
+        </html>
+      `);
       return;
     }
 
@@ -283,4 +325,21 @@ phantom_uptime_seconds ${process.uptime()}
       message: error.message 
     });
   }
-}; 
+};
+
+// Função auxiliar para ler body da requisição
+async function getRequestBody(req) {
+  return new Promise((resolve) => {
+    let body = '';
+    req.on('data', chunk => {
+      body += chunk.toString();
+    });
+    req.on('end', () => {
+      try {
+        resolve(JSON.parse(body));
+      } catch {
+        resolve({});
+      }
+    });
+  });
+} 
