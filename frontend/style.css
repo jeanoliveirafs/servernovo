@@ -1,0 +1,598 @@
+/* Reset e base styles */
+* {
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Estilo customizado para logs */
+.log-entry {
+  padding: 4px 0;
+  border-bottom: 1px solid rgba(75, 85, 99, 0.2);
+  font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+.log-entry:last-child {
+  border-bottom: none;
+}
+
+.timestamp {
+  color: #6B7280;
+  font-weight: 500;
+}
+
+.log-type {
+  font-weight: bold;
+  margin: 0 8px;
+}
+
+.log-message {
+  color: #D1D5DB;
+}
+
+/* Tipos de log */
+.log-info .log-type {
+  color: #60A5FA;
+}
+
+.log-success .log-type {
+  color: #34D399;
+}
+
+.log-warning .log-type {
+  color: #FBBF24;
+}
+
+.log-error .log-type {
+  color: #F87171;
+}
+
+.log-sync .log-type {
+  color: #A78BFA;
+}
+
+/* Status badges */
+.status-badge {
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: 11px;
+  font-weight: 500;
+  text-transform: uppercase;
+}
+
+.status-badge.connected {
+  background-color: rgba(34, 197, 94, 0.2);
+  color: #22C55E;
+}
+
+.status-badge.ready {
+  background-color: rgba(59, 130, 246, 0.2);
+  color: #3B82F6;
+}
+
+.status-badge.busy {
+  background-color: rgba(251, 191, 36, 0.2);
+  color: #FBBF24;
+}
+
+.status-badge.error {
+  background-color: rgba(248, 113, 113, 0.2);
+  color: #F87171;
+}
+
+/* Switch toggle para auto-scroll */
+.switch {
+  position: relative;
+  display: inline-block;
+  width: 44px;
+  height: 24px;
+}
+
+.switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: #374151;
+  transition: 0.3s ease;
+  border-radius: 24px;
+}
+
+.slider:before {
+  position: absolute;
+  content: "";
+  height: 18px;
+  width: 18px;
+  left: 3px;
+  bottom: 3px;
+  background-color: #9CA3AF;
+  transition: 0.3s ease;
+  border-radius: 50%;
+}
+
+input:checked + .slider {
+  background-color: #3B82F6;
+}
+
+input:checked + .slider:before {
+  transform: translateX(20px);
+  background-color: white;
+}
+
+/* Animações */
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+.animate-pulse {
+  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+/* Hover effects customizados */
+.hover-glow:hover {
+  box-shadow: 0 0 20px rgba(59, 130, 246, 0.3);
+  transform: translateY(-2px);
+  transition: all 0.3s ease;
+}
+
+/* Scrollbar customizada */
+#logs::-webkit-scrollbar {
+  width: 6px;
+}
+
+#logs::-webkit-scrollbar-track {
+  background: #1F2937;
+  border-radius: 3px;
+}
+
+#logs::-webkit-scrollbar-thumb {
+  background: #4B5563;
+  border-radius: 3px;
+}
+
+#logs::-webkit-scrollbar-thumb:hover {
+  background: #6B7280;
+}
+
+/* Responsividade */
+@media (max-width: 768px) {
+  .container {
+    padding-left: 16px;
+    padding-right: 16px;
+  }
+  
+  h1 {
+    font-size: 2rem;
+  }
+  
+  .grid {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+  
+  .log-entry {
+    font-size: 11px;
+  }
+  
+  .timestamp,
+  .log-type {
+    display: block;
+    margin-bottom: 2px;
+  }
+}
+
+/* Efeitos de loading */
+.loading {
+  position: relative;
+  color: transparent;
+}
+
+.loading::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+  animation: loading 1.5s infinite;
+}
+
+@keyframes loading {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+/* Estilo para cards com bordas animadas */
+.card-glow {
+  position: relative;
+  background: linear-gradient(145deg, #1F2937, #111827);
+  border: 1px solid transparent;
+  background-clip: padding-box;
+}
+
+.card-glow::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: -1;
+  margin: -1px;
+  border-radius: inherit;
+  background: linear-gradient(145deg, #3B82F6, #8B5CF6, #EF4444);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.card-glow:hover::before {
+  opacity: 0.7;
+}
+
+/* Texto gradiente para títulos */
+.gradient-text {
+  background: linear-gradient(145deg, #3B82F6, #8B5CF6);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Botões com efeitos especiais */
+.btn-phantom {
+  position: relative;
+  overflow: hidden;
+  background: linear-gradient(145deg, #4F46E5, #7C3AED);
+  transition: all 0.3s ease;
+}
+
+.btn-phantom::before {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: linear-gradient(45deg, transparent, rgba(255,255,255,0.1), transparent);
+  transform: rotate(45deg);
+  transition: all 0.6s ease;
+  opacity: 0;
+}
+
+.btn-phantom:hover::before {
+  opacity: 1;
+  transform: rotate(45deg) translate(50%, 50%);
+}
+
+/* Indicadores de status melhorados */
+.status-indicator {
+  position: relative;
+  display: inline-block;
+}
+
+.status-indicator::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  animation: status-pulse 2s infinite;
+  opacity: 0.6;
+}
+
+.status-indicator.online::after {
+  background-color: #10B981;
+}
+
+.status-indicator.offline::after {
+  background-color: #EF4444;
+}
+
+@keyframes status-pulse {
+  0% {
+    transform: translate(-50%, -50%) scale(1);
+    opacity: 0.6;
+  }
+  50% {
+    transform: translate(-50%, -50%) scale(1.2);
+    opacity: 0.3;
+  }
+  100% {
+    transform: translate(-50%, -50%) scale(1);
+    opacity: 0.6;
+  }
+}
+
+/* ============ PWA & MOBILE STYLES ============ */
+
+/* PWA specific styles */
+.pwa-mode {
+  padding-top: env(safe-area-inset-top);
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+/* Mobile-first responsive improvements */
+@media (max-width: 768px) {
+  /* Header mobile */
+  header .text-4xl {
+    font-size: 2rem !important;
+  }
+  
+  header .text-6xl {
+    font-size: 3rem !important;
+  }
+  
+  /* Grid mobile improvements */
+  .grid-cols-1.lg\\:grid-cols-3 {
+    grid-template-columns: 1fr !important;
+    gap: 1rem !important;
+  }
+  
+  .grid-cols-1.md\\:grid-cols-3.lg\\:grid-cols-5 {
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 0.5rem !important;
+  }
+  
+  /* Mobile buttons */
+  .grid-cols-1.md\\:grid-cols-3.lg\\:grid-cols-5 button {
+    padding: 0.75rem 0.5rem !important;
+    font-size: 0.875rem !important;
+    min-height: 44px;
+  }
+  
+  /* Shared links mobile */
+  .grid-cols-1.lg\\:grid-cols-2 {
+    grid-template-columns: 1fr !important;
+  }
+  
+  /* Form inputs mobile - prevent zoom on iOS */
+  input, select, textarea {
+    font-size: 16px !important;
+    max-width: 100%;
+  }
+  
+  /* Generated link display mobile */
+  #generated-link-display {
+    font-size: 0.75rem !important;
+    word-break: break-all !important;
+    line-height: 1.2 !important;
+  }
+  
+  /* Active links mobile */
+  #active-links .bg-gray-600 {
+    padding: 0.75rem !important;
+  }
+  
+  #active-links .text-xs {
+    font-size: 0.875rem !important;
+  }
+  
+  /* Logs mobile */
+  #logs {
+    height: 200px !important;
+    font-size: 0.75rem !important;
+  }
+  
+  /* Copy buttons mobile */
+  button[onclick*="copySharedLink"] {
+    min-width: 40px !important;
+    min-height: 40px !important;
+  }
+}
+
+/* Touch-friendly enhancements */
+@media (pointer: coarse) {
+  button, .clickable {
+    min-height: 44px;
+    min-width: 44px;
+    padding: 0.75rem;
+  }
+  
+  /* Larger text for better readability */
+  .text-xs {
+    font-size: 0.875rem !important;
+  }
+  
+  .text-sm {
+    font-size: 1rem !important;
+  }
+}
+
+/* PWA install button */
+.pwa-install-prompt {
+  position: fixed;
+  bottom: 1rem;
+  right: 1rem;
+  z-index: 1000;
+  animation: slideInUp 0.3s ease-out;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+}
+
+@keyframes slideInUp {
+  from {
+    transform: translateY(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+/* Shared links animations */
+.link-generated {
+  animation: linkPulse 0.6s ease-in-out;
+}
+
+@keyframes linkPulse {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.02); }
+  100% { transform: scale(1); }
+}
+
+/* Enhanced loading states */
+.loading-shimmer {
+  position: relative;
+  overflow: hidden;
+  background: #374151;
+}
+
+.loading-shimmer::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.1),
+    transparent
+  );
+  animation: shimmer 1.5s infinite;
+}
+
+@keyframes shimmer {
+  0% { left: -100%; }
+  100% { left: 100%; }
+}
+
+/* Dark mode optimizations */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg-primary: #0f172a;
+    --bg-secondary: #1e293b;
+    --bg-tertiary: #334155;
+    --text-primary: #f8fafc;
+    --text-secondary: #cbd5e1;
+  }
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+  .text-gray-400 {
+    color: #d1d5db !important;
+  }
+  
+  .border-gray-700 {
+    border-color: #6b7280 !important;
+  }
+  
+  button {
+    border: 2px solid currentColor !important;
+  }
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+  
+  .animate-pulse,
+  .loading-shimmer::after {
+    animation: none !important;
+  }
+}
+
+/* Enhanced focus styles for accessibility */
+button:focus,
+input:focus,
+select:focus,
+textarea:focus {
+  outline: 3px solid #3b82f6;
+  outline-offset: 2px;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+/* Custom scrollbar for mobile webkit */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #374151;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #6b7280;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #9ca3af;
+}
+
+/* Status indicators for shared links */
+.link-status {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.25rem 0.5rem;
+  border-radius: 0.375rem;
+  font-size: 0.75rem;
+  font-weight: 500;
+}
+
+.link-status.active {
+  background-color: rgba(34, 197, 94, 0.1);
+  color: #22c55e;
+}
+
+.link-status.expired {
+  background-color: rgba(239, 68, 68, 0.1);
+  color: #ef4444;
+}
+
+/* Smooth scroll behavior */
+html {
+  scroll-behavior: smooth;
+}
+
+/* Print styles for documentation */
+@media print {
+  .no-print {
+    display: none !important;
+  }
+  
+  body {
+    background: white !important;
+    color: black !important;
+  }
+  
+  .bg-gray-800,
+  .bg-gray-700 {
+    background: white !important;
+    border: 1px solid #ccc !important;
+  }
+}
